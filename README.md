@@ -2,6 +2,9 @@
 
 This repository contains the source code used in the paper "**Decompositional Reasoning for Graph Retrieval with Large Languages Models**". Note that our contributions focus on the retrieval stage of the pipeline. The generation pipeline takes strong inspirations from "G-Retriever: Retrieval-Augmented Generation for Textual Graph Understanding and Question Answering" ; the corresponding source code for their work can be found [here](https://github.com/XiaoxinHe/G-Retriever) and provides more information about certain parts of the code.
 
+![Figure](images/figure.png)
+
+
 ## Environment setup
 
 Create an environement for the project ()
@@ -70,6 +73,9 @@ python train.py --dataset {cwq, webqsp} --model_name graph_llm --llm_model_name 
 ```
 
 ## Running Pipeline
+
+![Figure](images/pipeline.png)
+
 Add your own path to the desired llm checkpoints in the `src/model/__init__.py`.
 
 Then you can run the pipeline with : 
