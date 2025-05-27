@@ -7,7 +7,7 @@ This repository contains the source code used in the paper "**Decompositional Re
 
 ## Environment setup
 
-Create an environement for the project ()
+Create an environement for the project:
 
 ```
 conda create --name cool_name python=3.9 -y
