@@ -15,6 +15,8 @@ from src.utils.evaluate import eval_funcs
 from src.utils.ckpt import _reload_model
 from src.utils.load import get_indices
 
+# Set the desired alpha value in the launch script
+
 alpha = os.environ.get("ALPHA")
 if alpha == None:
     print("Env variable not defined")
@@ -50,11 +52,11 @@ def final_prompt(question, subs):
 
 
 
-# Pipeline for generation (on the test-set)
+# Pipeline for generation
 
 def pipeline(args):
 
-    # Creating Dirs + Loading Dataset
+    # Creating Directories + Loading Dataset
     os.makedirs(path, exist_ok=True)
     os.makedirs(cached_graph, exist_ok=True)
     os.makedirs(cached_desc, exist_ok=True)
@@ -83,7 +85,7 @@ def pipeline(args):
     model = _reload_model(model, f"{args.output_dir}/{args.dataset}/{checkpoint}")
     model.eval()
 
-    # Uncomment for using different LLM for final question generation
+    # Uncomment following lines for using different LLM for final question generation
 
     # model = load_model[args.model_name](args=args, init_prompt = "From the given elements, answer the following question.")
     # checkpoint_sub = "model_name_graph_llm_llm_model_name_7b_llm_frozen_True_max_txt_len_512_max_new_tokens_32_gnn_model_name_gt_patience_2_num_epochs_10_checkpoint_best.pth"
@@ -118,6 +120,7 @@ def pipeline(args):
             else:
                 text = answer["pred"][0] + subquestion
 
+            # For each subquestion: performing retrieval, generating answer, conditionning the next subquestion 
             sq_emb = text2embedding(model_emb, tokenizer, device, text)
             subg, desc = retrieval_via_pcst_2(graph, q_emb, sq_emb, nodes, edges, topk=3, topk_e=5, cost_e=0.5, alpha=float(alpha))
             torch.save(subg, f'{cached_graph_sub}/{index}/{j}.pt') 
@@ -127,7 +130,7 @@ def pipeline(args):
                 answer = model.inference_sub(sample)
                 subanswer_list.append({"question":subquestion, "answer": answer["pred"][0]})
 
-        # Merging graphs and descs
+        # Merging graphs and textual descs
         subgraphs = []
         num_subquestions = len(subquestions)
         if num_subquestions == 0:
@@ -152,6 +155,7 @@ def pipeline(args):
         except:
             continue
 
+        # Saving graphs
         torch.save(merged_graph, f'{path}/cached_graphs/{index}.pt')
         with open(f'{path}/cached_desc/{index}.txt', 'w') as k:
             k.write(merged_desc)
@@ -169,9 +173,9 @@ def pipeline(args):
     final_df = pd.concat(all_results, ignore_index=True)
     final_df.to_csv(save_path, index=False)
 
-    print("Done with preprocessing !")
+    print("Done with pipeline !")
 
-
+    # Model evaluation ; bad calls show the samples where the generated answer is incorrect
     acc, bad_calls = eval_funcs[args.dataset](save_path)
 
     open(f'{output_path}/bad_calls.txt',"w").write(str(bad_calls))

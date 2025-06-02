@@ -10,8 +10,6 @@ from torch_geometric.utils import to_networkx
 
 from src.config import parse_args_llama
 from src.utils.load import load_parquet
-from src.utils.lm_modeling import load_model, load_text2embedding
-from src.dataset.utils.retrieval import retrieval_via_pcst_2, retrieval_filter_test
 
 
 alpha = os.environ.get("ALPHA")
@@ -21,6 +19,9 @@ if alpha == None:
 args = parse_args_llama()
 
 dataset_path = f"/home/project/decomp_datasets/{args.dataset}/dataset_chunk_*.parquet"
+
+
+# Collection of useful functions for evaluation, additional results...
 
 
 
@@ -110,12 +111,11 @@ def check_density(path):
 
 
 
-def check_size(test_range):
+def check_size(path, test_range):
 
     dataset = load_parquet(dataset_path)
     dataset = Subset(dataset, test_range)
 
-    path = '/home/data/edufraisse/vsix/DATA/dataset/subquestions/cond/pipeline_4/0.5'
     cached_graphs  =f'{path}/cached_graphs'
 
     total_size = 0
@@ -126,42 +126,4 @@ def check_size(test_range):
         total_size += size
     print(total_size/999)
 
-
-
-def filter_centrality(test_range):
-    dataset = load_parquet(dataset_path)
-    dataset = Subset(dataset, test_range)
-
-    index = 0
-    cwq_path = '/home/data/edufraisse/vsix/DATA/dataset/cwq'
-    path_nodes = f'{cwq_path}/nodes'
-    path_edges = f'{cwq_path}/edges'
-    path_graphs = f'{cwq_path}/graphs'
-
-    nodes = pd.read_csv(f'{path_nodes}/{index}.csv')
-    edges = pd.read_csv(f'{path_edges}/{index}.csv')
-    graph = torch.load(f'{path_graphs}/{index}.pt')
-
-    q_embs = torch.load(f'{cwq_path}/q_embs.pt')
-    q_emb = q_embs[index]
-    
-    model_name = 'sbert'
-    model, tokenizer, device = load_model[model_name]()
-    text2embedding = load_text2embedding[model_name]
-
-    subquestions = dataset[index]["subquestions"]
-    sq_emb = text2embedding(model, tokenizer, device, subquestions[0])
-
-    print("Ready for retrieval")
-
-    subg_test, subd_test = retrieval_filter_test(graph, q_emb, sq_emb, nodes, edges, topk=3, topk_e=3, cost_e=0.5, alpha=0.5)
-
-    print("Done with test")
-
-    subg, subd = retrieval_via_pcst_2(graph, q_emb, sq_emb, nodes, edges, topk=3, topk_e=3, cost_e=0.5, alpha=0.5)
-
-    print("Done with baseline")
-
-    print(subd_test)
-    print(subd)
 
