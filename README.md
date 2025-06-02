@@ -15,6 +15,8 @@ conda activate cool_name
 
 Following the versions used in G-Retriever:
 
+Please check that your CUDA version is comptibe with the following installations ; you can adapt the installations to your version, but mind that some libraries might work differently.
+
 # https://pytorch.org/get-started/locally/
 conda install pytorch==2.0.1 torchvision==0.15.2 torchaudio==2.0.2 pytorch-cuda=11.8 -c pytorch -c nvidia
 
