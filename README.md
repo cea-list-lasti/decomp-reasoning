@@ -1,6 +1,8 @@
 # Decompositional Reasoning for Graph Retrieval with LLMs
 
-This repository contains the source code used in the paper "**Decompositional Reasoning for Graph Retrieval with Large Languages Models**". Note that our contributions focus on the retrieval stage of the pipeline. The generation pipeline takes strong inspirations from "G-Retriever: Retrieval-Augmented Generation for Textual Graph Understanding and Question Answering" ; the corresponding source code for their work can be found [here](https://github.com/XiaoxinHe/G-Retriever) and provides more information about certain parts of the code.
+This repository contains the source code used in the paper "**Decompositional Reasoning for Graph Retrieval with Large Languages Models**". 
+
+Note that our contributions focus on the retrieval stage of the pipeline. The generation pipeline takes strong inspirations from "G-Retriever: Retrieval-Augmented Generation for Textual Graph Understanding and Question Answering" ; the original source code for their work, under the MIT license, can be found [here](https://github.com/XiaoxinHe/G-Retriever) and provides more information about certain parts of the code.
 
 ![Figure](images/pipeline.png)
 
@@ -15,7 +17,7 @@ conda activate cool_name
 
 Following the versions used in G-Retriever:
 
-Please check that your CUDA version is comptibe with the following installations ; you can adapt the installations to your version, but mind that some libraries might work differently.
+Please check that your CUDA version is compatible with the following installations ; you can adapt the installations to your version, but mind that some libraries might work differently.
 
 # https://pytorch.org/get-started/locally/
 conda install pytorch==2.0.1 torchvision==0.15.2 torchaudio==2.0.2 pytorch-cuda=11.8 -c pytorch -c nvidia
