@@ -1,6 +1,6 @@
-# Decompositional Reasoning for Graph Retrieval with LLMs
+# DAGR: Decomposition Augmented Graph Retrieval with LLMs
 
-This repository contains the source code used in the paper "**Decompositional Reasoning for Graph Retrieval with Large Languages Models**". 
+This repository contains the source code used in the paper "**DAGR: Decomposition Augmented Graph Retrieval with LLMs**". 
 
 Note that our contributions focus on the retrieval stage of the pipeline. The generation pipeline takes strong inspirations from "G-Retriever: Retrieval-Augmented Generation for Textual Graph Understanding and Question Answering" ; the original source code for their work, under the MIT license, can be found [here](https://github.com/XiaoxinHe/G-Retriever) and provides more information about certain parts of the code.
 
