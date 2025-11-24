@@ -1,8 +1,8 @@
-# DAGR: Decomposition Augmented Graph Retrieval with LLMs
+# The Structure-Content Trade-off in Knowledge Graph Retrieval
 
-This repository contains the source code used in the paper "**DAGR: Decomposition Augmented Graph Retrieval with LLMs**". 
+This repository contains the source code used in the paper "**The Structure-Content Trade-off in Knowledge Graph Retrieval**". 
 
-Note that our contributions focus on the retrieval stage of the pipeline. The generation pipeline takes strong inspirations from "G-Retriever: Retrieval-Augmented Generation for Textual Graph Understanding and Question Answering" ; the original source code for their work, under the MIT license, can be found [here](https://github.com/XiaoxinHe/G-Retriever) and provides more information about certain parts of the code.
+The RAG pipeline takes strong inspirations from "G-Retriever: Retrieval-Augmented Generation for Textual Graph Understanding and Question Answering" ; the original source code for their work, under MIT license, can be found [here](https://github.com/XiaoxinHe/G-Retriever) and provides more information about certain parts of the code.
 
 ![Figure](images/pipeline.png)
 
@@ -30,7 +30,7 @@ The other libraries needed (with their specified version) can be found in the re
 
 ```
 
-It is recommanded to follow the follwing strcuture for your files (the code assumes such a structure is respected):
+It is recommanded to have the following structure for your files (the code assumes such a structure is respected):
 
 ```
 .
@@ -46,7 +46,7 @@ It is recommanded to follow the follwing strcuture for your files (the code assu
 
 You can download the necessary datasets on HuggingFace and place them in the `datasets` folder : https://huggingface.co/datasets/rmanluo/RoG-cwq, https://huggingface.co/datasets/rmanluo/RoG-webqsp.
 
-We choose to work with different LLaMa-2 models (7B and 13B). You can either download these models and use them locally, or you can also use them via online access with the transformers library for HuggingFace (https://huggingface.co/meta-llama/Llama-2-7b-hf).
+We choose to work with different LLaMa-2 models (7B and 13B). You can find these models onHuggingFace (https://huggingface.co/meta-llama/Llama-2-7b-hf).
 
 That being said, you can also choose to use another LLM, but you will have to change the output dimensions of the linear projector within the pipeline. 
 
