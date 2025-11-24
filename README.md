@@ -4,9 +4,6 @@ This repository contains the source code used in the paper "**The Structure-Cont
 
 The RAG pipeline takes strong inspirations from "G-Retriever: Retrieval-Augmented Generation for Textual Graph Understanding and Question Answering" ; the original source code for their work, under MIT license, can be found [here](https://github.com/XiaoxinHe/G-Retriever) and provides more information about certain parts of the code.
 
-![Figure](images/pipeline.png)
-
-
 ## Environment setup
 
 Create an environement for the project:
