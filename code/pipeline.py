@@ -1,3 +1,4 @@
+import logging
 import os
 import pandas as pd
 import torch
@@ -15,20 +16,28 @@ from src.utils.evaluate import eval_funcs
 from src.utils.ckpt import _reload_model
 from src.utils.load import get_indices
 
+from config import DATASET_BASE_PATH, PROJECT_ROOT, LLM_MODELS_PATH
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
 # Set the desired alpha value in the launch script
 
 alpha = os.environ.get("ALPHA")
 if alpha == None:
-    print("Env variable not defined")
+    logger.warning("Env variable not defined")
 
 
 args = parse_args_llama()
 
 
 model_name = 'sbert'
-path = f'/home/project/preprocessed/{args.dataset}'
-alpha_path = f'{path}/decomp_reasoning/{alpha}'
-dataset_path = f"/home/project/decomp_datasets/{args.dataset}/dataset_chunk_*.parquet"
+# path = f'/home/project/preprocessed/{args.dataset}'
+path = str(DATASET_BASE_PATH / 'cwq')
+# alpha_path = f'{path}/decomp_reasoning/{alpha}'
+alpha_path = str(DATASET_BASE_PATH / 'subquestions/cond_option_1')
+dataset_path = str(DATASET_BASE_PATH)  + "/cwq_reason/subquestions/2/dataset_chunk_*.parquet"
 output_path = f'{args.output_dir}/{args.dataset}/{alpha}'
 path_nodes = f'{path}/nodes'
 path_edges = f'{path}/edges'
@@ -39,7 +48,7 @@ cached_desc_sub = f'{alpha_path}/cached_desc_sub'
 cached_graph = f'{alpha_path}/cached_graphs'
 cached_desc = f'{alpha_path}/cached_desc'
 
-
+logger.info(f"dataset_path: {dataset_path}")
 # Building the prompt for final answer generation
 
 def final_prompt(question, subs):
@@ -64,24 +73,26 @@ def pipeline(args):
     os.makedirs(cached_desc_sub, exist_ok=True)
     os.makedirs(output_path, exist_ok=True)
     torch.cuda.empty_cache()
-    print("Cleared Memory Cache")
-    print('Loading dataset...')
+    logger.info("Cleared Memory Cache")
+    logger.info('Loading dataset...')
     dataset = load_parquet(dataset_path)
     test_indices = get_indices(f"{path}/split/test_indices.txt")
     dataset = Subset(dataset, test_indices)
-    print(f"Size of the fed up dataset: {len(dataset)}")
+    logger.info(f"Size of the fed up dataset: {len(dataset)}")
 
     # Loading Encoder
     model_emb, tokenizer, device = lm[model_name]()
     text2embedding = load_text2embedding[model_name]
 
     # Loading LLM for subquestions
-    args.llm_model_path = llama_model_path[args.llm_model_name]
+    if not args.llm_model_path:
+        args.llm_model_path = llama_model_path[args.llm_model_name]
     model = load_model[args.model_name](args=args, init_prompt = "Your role is to answer a question using a graph.")
     if args.llm_model_name == "13b" or args.llm_model_name == "13b_chat":
         checkpoint = "model_name_graph_llm_llm_model_name_13b_llm_frozen_True_max_txt_len_512_max_new_tokens_32_gnn_model_name_gt_patience_2_num_epochs_10_checkpoint_best.pth"
     if args.llm_model_name == "7b" or args.llm_model_name == "7b_chat":
-        checkpoint = "model_name_graph_llm_llm_model_name_7b_llm_frozen_True_max_txt_len_512_max_new_tokens_32_gnn_model_name_gt_patience_2_num_epochs_10_checkpoint_best.pth"
+        # checkpoint = "model_name_graph_llm_llm_model_name_7b_llm_frozen_True_max_txt_len_512_max_new_tokens_32_gnn_model_name_gt_patience_2_num_epochs_10_checkpoint_best.pth"
+        checkpoint = "model_name_graph_llm_llm_model_name_7b_llm_frozen_True_max_txt_len_512_max_new_tokens_32_gnn_model_name_gt_patience_2_num_epochs_10_seed0_checkpoint_best.pth"
     model = _reload_model(model, f"{args.output_dir}/{args.dataset}/{checkpoint}")
     model.eval()
 
@@ -94,12 +105,13 @@ def pipeline(args):
 
     # Pipeline
     save_path = f'{output_path}/model_name_{args.model_name}_llm_model_name_{args.llm_model_name}_llm_frozen_{args.llm_frozen}_max_txt_len_{args.max_txt_len}_max_new_tokens_{args.max_new_tokens}_gnn_model_name_{args.gnn_model_name}_patience_{args.patience}_num_epochs_{args.num_epochs}_alpha{alpha}_test_first1000.csv'
-    print(f'save_path: {save_path}')
+    logger.info(f'save_path: {save_path}')
     first = test_indices[0]
     q_embs = torch.load(f'{path}/q_embs.pt')
     all_results = []
 
     # Iterate over questions
+    missing_parts = 0
     for ind, line in enumerate(tqdm(dataset)):
         index = ind + first # if you generated subquestions for entire dataset
         index = ind # if you only generated subquestions for the test set
@@ -107,7 +119,13 @@ def pipeline(args):
         q_emb = q_embs[index]
         nodes = pd.read_csv(f'{path_nodes}/{index}.csv')
         edges = pd.read_csv(f'{path_edges}/{index}.csv')
-        graph = torch.load(f'{path_graphs}/{index}.pt')
+        try:
+            graph = torch.load(f'{path_graphs}/{index}.pt')
+        except FileNotFoundError as e:
+            logger.warning(f"Dataset file missing. Skipping part: {index}")
+            missing_parts += 1
+            continue
+
         answer = None
         subquestions = line["subquestions"]
         os.makedirs(f"{cached_graph_sub}/{index}", exist_ok=True)
@@ -134,25 +152,26 @@ def pipeline(args):
         subgraphs = []
         num_subquestions = len(subquestions)
         if num_subquestions == 0:
-            print(f"No subquestions at index {index}")
+            logger.info(f"No subquestions at index {index}")
             continue
 
         for j in range(num_subquestions):
             subgraph_path = f'{cached_graph_sub}/{index}/{j}.pt'
             desc_path = f'{cached_desc_sub}/{index}/{j}.txt'
             if not os.path.exists(subgraph_path) or not os.path.exists(desc_path):
-                print(f'Missing files for question {index}, subquestion {j}')
+                logger.warning(f'Missing files for question {index}, subquestion {j}')
                 continue
             subgraph = torch.load(subgraph_path)
             subgraphs.append((subgraph, desc_path))
 
 
         if len(subgraphs) == 0:
-            print(f"No subgraphs to concatenate at index {index}")
+            logger.info(f"No subgraphs to concatenate at index {index}")
             continue
         try:
             merged_graph, merged_desc = concatenate_subgraphs_2(subgraphs)
-        except:
+        except Exception as e:
+            logger.warning(f"Exception during subgraphs concatenation: {e}")
             continue
 
         # Saving graphs
@@ -169,18 +188,19 @@ def pipeline(args):
 
         df = pd.DataFrame(answer)
         all_results.append(df)
-             
+    if missing_parts > 0:
+        logger.info(f"There was {missing_parts} missing parts")
     final_df = pd.concat(all_results, ignore_index=True)
     final_df.to_csv(save_path, index=False)
 
-    print("Done with pipeline !")
+    logger.info("Done with pipeline !")
 
     # Model evaluation ; bad calls show the samples where the generated answer is incorrect
     acc, bad_calls = eval_funcs[args.dataset](save_path)
 
     open(f'{output_path}/bad_calls.txt',"w").write(str(bad_calls))
     open(f'{output_path}/metrics.txt',"w").write(str(acc))
-    print(f'Test Acc {acc}')
+    logger.info(f'Test Acc {acc}')
 
 
 if __name__ == "__main__":

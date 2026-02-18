@@ -180,7 +180,7 @@ def concatenate_subgraphs_2(subgraphs):
     # Concatenate Nodes
     all_nodes = torch.cat(all_nodes, dim=0)
     unique_nodes, inverse_indices = torch.unique(all_nodes, dim=0, return_inverse=True) # remove the duplicate nodes 
-    print(f" {all_nodes.size(0) - unique_nodes.size(0)} duplicate nodes removed")
+    # print(f" {all_nodes.size(0) - unique_nodes.size(0)} duplicate nodes removed")
 
     # Remap edges for filtered nodes
     for i in range(len(all_edges)):

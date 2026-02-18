@@ -1,4 +1,40 @@
 import argparse
+import os
+
+from dotenv import load_dotenv
+from pathlib import Path
+
+
+load_dotenv()  # Loads variables from .env into os.environ
+
+
+HOME = os.getenv("HOME")
+if HOME is None:
+    raise RuntimeError("The HOME environment variable should exist.")
+
+# 2. SETUP BASE DIRECTORIES
+# Path(__file__).resolve().parent gives the directory of config.py
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+
+# 3. DEFINE PATHS WITH HIERARCHY
+# Priority: 1. Actual Env Var -> 2. .env file -> 3. Fallback (Project Root)
+DATASET_BASE_PATH = Path(os.getenv(
+    "DATASET_PATH",
+    PROJECT_ROOT / "dataset"
+))
+
+LLM_MODELS_PATH = Path(os.getenv(
+    "LLM_MODELS_PATH ",
+    "/home/data/dataset/huggingface/LLMs"
+))
+
+# 4. CONVENIENCE PATHS
+LOG_DIR = PROJECT_ROOT / "logs"
+
+# Ensure directories exist
+for directory in [DATASET_BASE_PATH, LOG_DIR]:
+    directory.mkdir(parents=True, exist_ok=True)
+
 
 def csv_list(string):
     return string.split(',')
@@ -29,7 +65,7 @@ def parse_args_llama():
     parser.add_argument("--llm_model_path", type=str, default='')
     parser.add_argument("--llm_frozen", type=str, default='True')
     parser.add_argument("--llm_num_virtual_tokens", type=int, default=10)
-    parser.add_argument("--output_dir", type=str, default='/home/project/output')
+    parser.add_argument("--output_dir", type=str, default=f'{PROJECT_ROOT}/output')
     parser.add_argument("--max_txt_len", type=int, default=512)
     parser.add_argument("--max_new_tokens", type=int, default=32)
     parser.add_argument("--max_memory", type=csv_list, default=[80,80])
